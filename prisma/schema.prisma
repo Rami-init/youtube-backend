@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// user not done yet, missing subscribers  feilds
+model User {
+  id          String    @id
+  username    String
+  email       String
+  dispalyName String
+  verified    Boolean   @default(false)
+  description String?   @db.Text
+  pic         String?   @db.Text
+  banner      String?   @db.Text
+  location    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  history     History[] @relation("userHistory")
+  videos      Video[]   @relation("autherVideo")
+  votes       Vote[]    @relation("userVote")
+  comments    Comment[] @relation("autherComments")
+  replies     Comment[] @relation("userReplies")
+  seeLater    Video[]   @relation("userSeeLater")
+}
+
+// video aleady done
+model Video {
+  id          String    @id @default(uuid())
+  title       String
+  file        String    @db.Text
+  duration    Int
+  views       Int       @default(0)
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isPrivate   Boolean   @default(false)
+  votes       Vote[]    @relation("videoVote")
+  history     History[] @relation("videoHistory")
+  comments    Comment[] @relation("userComments")
+  user        User?     @relation("autherVideo", fields: [userId], references: [id])
+  userId      String?
+  seeLater    User[]    @relation("userSeeLater")
+}
+
+// history aleady done
+model History {
+  id      String   @id @default(uuid())
+  addedAt DateTime @default(now())
+  user    User?    @relation("userHistory", fields: [userId], references: [id])
+  userId  String?
+  video   Video?   @relation("videoHistory", fields: [videoId], references: [id])
+  videoId String?
+}
+
+// vote aleady done
+model Vote {
+  id         String   @id @default(uuid())
+  value      Int
+  crteatedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  User       User?    @relation("userVote", fields: [userId], references: [id])
+  userId     String?
+  video      Video?   @relation("videoVote", fields: [videoId], references: [id])
+  videoId    String?
+  comment    Comment? @relation(fields: [commentId], references: [id])
+  commentId  String?
+}
+
+// comments aleady done
+model Comment {
+  id              String    @id @default(uuid())
+  content         String    @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt()
+  votes           Vote[]
+  video           Video?    @relation("userComments", fields: [videoId], references: [id])
+  videoId         String?
+  replies         Comment[] @relation("commentToComments")
+  parentComment   Comment?  @relation("commentToComments", fields: [parentCommentId], references: [id])
+  parentCommentId String?
+  auther          User?     @relation("autherComments", fields: [autherId], references: [id])
+  autherId        String?
+  repliesUser     User?     @relation("userReplies", fields: [repliesUserId], references: [id])
+  repliesUserId   String?
+}
